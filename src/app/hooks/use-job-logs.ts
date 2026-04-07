@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { getAccessToken } from "./use-auth";
-import { ConnectionStatus, LogEntry } from "../types";
+import { ConnectionStatus, WebSokectLogEntry } from "../types";
 import { wsManager } from "../lib/websocket";
 
 export function useJobLogs(jobId: string | undefined) {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logs, setLogs] = useState<WebSokectLogEntry[]>([]);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +18,8 @@ export function useJobLogs(jobId: string | undefined) {
 
     // 2. Subscribe to logs, status changes, and errors
     const unsubscribe = wsManager.subscribe({
-      onLog: (log: LogEntry) => setLogs((prev: LogEntry[]) => [...prev, log]),
+      onLog: (log: WebSokectLogEntry) =>
+        setLogs((prev: WebSokectLogEntry[]) => [...prev, log]),
       onStatus: (newStatus) => setStatus(newStatus),
       onError: (newError) => setError(newError),
     });
