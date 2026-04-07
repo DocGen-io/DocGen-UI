@@ -1,31 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { cn } from "../../ui/utils";
-import {
-  Bug,
-  FileCode2,
-  FileText,
-  FolderGit2,
-  GitPullRequest,
-  LayoutDashboard,
-  Settings,
-  Sliders,
-  Users,
-} from "lucide-react";
 import { useLocation } from "react-router";
-
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Jobs", href: "/jobs", icon: FolderGit2 },
-  { name: "Revisions", href: "/revisions", icon: GitPullRequest },
-  { name: "Traces", href: "/traces", icon: Bug },
-  { name: "Config", href: "/config", icon: Sliders },
-  { name: "Endpoints", href: "/endpoints", icon: FileCode2 },
-  { name: "Prompts", href: "/prompts", icon: FileText },
-
-  { name: "Teams", href: "/teams", icon: Users },
-  { name: "Settings", href: "/settings", icon: Settings },
-];
+import { NAVIGATION_ITEMS } from "../../../definitions/navigation";
 
 const Navigation = () => {
   const [open, setOpen] = useState(false);
@@ -33,7 +10,7 @@ const Navigation = () => {
 
   return (
     <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-      {navigation.map((item) => {
+      {NAVIGATION_ITEMS.map((item) => {
         const isActive = location.pathname.startsWith(item.href);
         return (
           <Link
