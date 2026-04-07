@@ -1,5 +1,6 @@
 // ==================== Job Management ====================
 
+import { LucideIcon } from "lucide-react";
 import { LogEntry } from "./logs";
 
 export type JobType = "git" | "local" | "upload";
@@ -37,3 +38,21 @@ export interface JobStatusResponse {
   job: Job;
   logs: LogEntry[];
 }
+
+export type UIComponentVariant =
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "outline"
+  | null
+  | undefined;
+
+export interface StatusConfig {
+  label: string;
+  icon: LucideIcon;
+  variant?: UIComponentVariant;
+  animate?: boolean;
+  className?: string;
+}
+
+export type StatusConfigMap = Record<JobStatus, StatusConfig>;

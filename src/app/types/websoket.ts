@@ -6,7 +6,7 @@ export interface WebSocketMessage {
   timestamp: string;
 }
 
-export interface LogEntry {
+export interface WebSokectLogEntry {
   timestamp: string;
   level: "debug" | "info" | "warning" | "error" | "success";
   message: string;
@@ -20,7 +20,7 @@ export type ConnectionStatus =
   | "complete";
 
 export interface Subscriber {
-  onLog: (log: LogEntry) => void;
+  onLog: (log: WebSokectLogEntry) => void;
   onStatus: (status: ConnectionStatus) => void;
   onError: (error: string | null) => void;
 }
