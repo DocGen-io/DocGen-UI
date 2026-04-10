@@ -44,20 +44,23 @@ export function useClusterJob(clusterJobId: string | null) {
   });
 }
 
-export function useSemanticSearch(projectName: string) {
+export function useSemanticSearch(projectName: string, team_id: string) {
   return useMutation({
     mutationFn: (query: string) =>
-      endpointsApi.queryEndpoints(projectName, query),
+      endpointsApi.queryEndpoints(projectName, query, team_id),
   });
 }
 
-export function useClustering(projectName: string) {
+export function useClustering(projectName: string, team_id: string) {
   return useMutation({
-    mutationFn: () => endpointsApi.getClusters(projectName),
+    mutationFn: () => endpointsApi.getClusters(projectName, team_id),
   });
 }
 
-export function useRerunPipeline(projectName: string, teamId: string | undefined) {
+export function useRerunPipeline(
+  projectName: string,
+  teamId: string | undefined,
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () =>
@@ -71,5 +74,17 @@ export function useRerunPipeline(projectName: string, teamId: string | undefined
     },
     onError: (err: any) =>
       toast.error(`Failed to start pipeline: ${err.message}`),
+  });
+}
+
+export function useGenerateExamples(projectName: string, teamId: string) {
+  return useMutation({
+    mutationFn: (swaggerData: any) =>
+      endpointsApi.generateExamples(projectName, teamId, swaggerData),
+    onSuccess: () => {
+      toast.success("Example generation job started");
+    },
+    onError: (err: any) =>
+      toast.error(`Failed to start example generation: ${err.message}`),
   });
 }

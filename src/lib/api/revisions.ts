@@ -1,5 +1,5 @@
 import { api } from '@/lib/api/client';
-import type { Revision, RevisionSummary } from '@/types';
+import type { Revision } from '@/types';
 
 export const revisionsAPI = {
   getAll: (teamId: string, status?: string, jobId?: string) => {

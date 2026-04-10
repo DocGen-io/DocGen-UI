@@ -27,6 +27,9 @@ export const teamsAPI = {
   async requestJoin(teamId: string) {
     return api.post<any>(`/teams/${teamId}/request-join`, {});
   },
+  async joinViaInviteToken(token: string) {
+    return api.post<any>(`/teams/join/${token}`, {});
+  },
   getPendingInvitations: (teamId: string) =>
     api.get<any[]>(`/teams/${teamId}/invitations`),
   updateMemberRole: (teamId: string, userId: string, role: string) =>
