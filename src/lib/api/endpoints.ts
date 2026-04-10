@@ -17,8 +17,9 @@ export const endpointsApi = {
     return res;
   },
 
-  listProjects: async () => {
-    const res = await api.get<{ projects: string[] }>("/endpoints/");
+  listProjects: async (teamId?: string) => {
+    const url = teamId ? `/endpoints/?team_id=${teamId}` : "/endpoints/";
+    const res = await api.get<{ projects: string[] }>(url);
     return res;
   },
 
