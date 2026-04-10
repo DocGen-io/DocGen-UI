@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/shared/page-header";
-import { Loader2, LayoutGrid, Sparkles } from "lucide-react";
+import { Loader2, LayoutGrid, Sparkles, Bug } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useNavigate, useSearchParams } from "react-router";
 import { useTeamStore } from "@/stores/team-store";
 import { EndpointCard } from "@/components/endpoints/endpoint-card";
 import { ProjectSelector } from "@/components/endpoints/project-selector";
@@ -17,11 +19,13 @@ import {
   useSemanticSearch,
   useClustering,
   useRerunPipeline,
+  useAvailableProjects,
 } from "@/hooks/use-endpoints";
 import { useProjectDiscovery } from "@/hooks/use-project-discovery";
 
 export function EndpointsPage() {
   const { activeTeam } = useTeamStore();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "query" | "clusters">(
     "all",
@@ -31,8 +35,12 @@ export function EndpointsPage() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [clusterResult, setClusterResult] = useState<any>(null);
 
-  const { projectName, setProjectName, availableProjects, setSearchParams } =
-    useProjectDiscovery(activeTeam?.name);
+  const { data: projectsData } = useAvailableProjects(activeTeam?.id);
+  const availableProjects = useMemo(() => projectsData?.projects || [], [projectsData]);
+
+  const { projectName, setProjectName } =
+    useProjectDiscovery(availableProjects);
+
 
   // Data fetching
   const { data: endpointsData, isLoading: isLoadingEndpoints } =
@@ -109,8 +117,15 @@ export function EndpointsPage() {
             projectName={projectName}
             setProjectName={setProjectName}
             availableProjects={availableProjects}
-            setSearchParams={setSearchParams}
           />
+          <Button
+            variant="outline"
+            className="h-10 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 font-bold gap-2"
+            onClick={() => navigate(`/traces?project=${projectName}`)}
+          >
+            <Bug className="w-4 h-4" />
+            View Traces
+          </Button>
           <EndpointActions
             onCluster={handleClustering}
             isClustering={clustering.isPending}
