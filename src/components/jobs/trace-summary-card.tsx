@@ -1,14 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Hash, Timer, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useProjectTraces } from '@/hooks/use-phoenix';
+import { useMemo } from 'react';
 
 interface TraceSummaryProps {
-  summary: any | undefined;
-  isError: boolean;
+  activeTeam: any;
+  projectName: string | null;
+  jobId: string;
   onViewTraces?: () => void;
 }
 
-export function TraceSummaryCard({ summary, isError, onViewTraces }: TraceSummaryProps) {
+export function TraceSummaryCard({ activeTeam, projectName, jobId, onViewTraces }: TraceSummaryProps) {
+  const { data: traceData, isError } = useProjectTraces(activeTeam, projectName || undefined, jobId);
+
+  // Calculate summary internally
+  const summary = useMemo(() => {
+    if (!traceData) return null;
+    return {
+      total_spans: traceData.reduce((sum: number, t: any) => sum + t.spanCount, 0),
+      total_tokens: traceData.reduce((sum: number, t: any) => sum + t.totalTokens, 0),
+      avg_latency_ms: traceData.length > 0 
+        ? traceData.reduce((sum: number, t: any) => sum + t.latencyMs, 0) / traceData.length 
+        : 0,
+      total_cost: traceData.reduce((sum: number, t: any) => sum + t.totalCost, 0),
+    };
+  }, [traceData]);
   return (
     <Card className="border-border/60 shadow-sm">
       <CardHeader className="pb-4">
