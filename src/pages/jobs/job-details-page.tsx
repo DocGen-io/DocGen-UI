@@ -1,9 +1,8 @@
-// pages/job-details-page.tsx
 import { useParams, useNavigate } from "react-router";
 import { useJobStatus } from "@/hooks/use-jobs";
 import { useJobLogs } from "@/hooks/use-job-logs";
 import { useRevisions } from "@/hooks/use-revisions";
-import { useTracesForJob } from "@/hooks/use-traces";
+import { useProjectDiscovery } from "@/hooks/use-project-discovery";
 import { useTeamStore } from "@/stores/team-store";
 
 import { PageHeader } from "@/components/shared/page-header";
@@ -18,6 +17,7 @@ import { LogViewer } from "@/components/jobs/log-viewer";
 
 import { JobArtifactsCard } from "@/components/jobs/job-artifacts-card";
 import { useMergedLogs } from "@/hooks/use-merge-logs";
+import { JobDuration } from "@/components/jobs/job-duration";
 import JobLoadingState from "@/components/jobs/job-loading";
 import JobErrorState from "@/components/jobs/job-error";
 
@@ -33,9 +33,7 @@ export function JobDetailsPage() {
   } = useJobStatus(activeTeam?.id, jobId);
   const { logs: realtimeLogs, status: logsStatus } = useJobLogs(jobId);
   const { data: revisions } = useRevisions(activeTeam?.id, undefined, jobId);
-  const { data: traceData, isError: traceError } = useTracesForJob(jobId);
-
-  console.log(traceData);
+  const { projectName } = useProjectDiscovery();
 
   const job = jobResponse?.job;
   const allLogs = useMergedLogs(jobResponse?.logs, realtimeLogs);
@@ -60,8 +58,11 @@ export function JobDetailsPage() {
               <span className="text-2xl font-bold tracking-tight">
                 Job Analysis
               </span>
-              <span className="text-xs font-mono text-muted-foreground uppercase opacity-50">
+              <span className="text-xs font-mono text-muted-foreground uppercase opacity-50 flex items-center gap-2">
                 {job.id.substring(0, 8)}
+                <span className="text-[10px] lowercase font-normal opacity-60">
+                  • duration: <JobDuration createdAt={job.created_at} updatedAt={job.updated_at || undefined} status={job.status} />
+                </span>
               </span>
             </div>
           </div>
@@ -75,8 +76,10 @@ export function JobDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <JobInfoCard job={job} />
             <TraceSummaryCard
-              summary={traceData?.summary}
-              isError={traceError}
+              projectName={projectName || null}
+              jobId={jobId!!}
+              activeTeam={activeTeam}
+              onViewTraces={() => navigate(`/traces?project=${projectName || ""}&job=${jobId}`)}
             />
           </div>
           <LogViewer logs={allLogs} isLoading={logsStatus === "connecting"} />
@@ -87,7 +90,6 @@ export function JobDetailsPage() {
           <JobArtifactsCard
             job={job}
             revisions={revisions}
-            activeTeamName={activeTeam?.name}
           />
 
           {/* Help Card (Small enough to stay inline, or could be extracted too) */}
