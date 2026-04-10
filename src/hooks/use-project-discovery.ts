@@ -1,38 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router";
-import { useAvailableProjects } from "@/hooks/use-endpoints";
 
-export function useProjectDiscovery(activeTeamName?: string) {
+export function useProjectDiscovery(availableProjects: string[] = []) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: availableProjectsData } = useAvailableProjects();
-
-  const teamProjectName =
-    activeTeamName?.toLowerCase().replace(/\s+/g, "-") || "default-project";
-
   const urlProject = searchParams.get("project");
-  const [projectName, setProjectName] = useState(urlProject || teamProjectName);
+
+  const [projectName, setProjectName] = useState(urlProject || "");
 
   useEffect(() => {
     if (urlProject) {
-      setProjectName(urlProject);
-    } else if (availableProjectsData?.projects && !urlProject) {
-      const exists = availableProjectsData.projects.find(
-        (p) => p.toLowerCase() === teamProjectName.toLowerCase(),
-      );
-      if (exists) {
-        setProjectName(exists); // Use the actual casing from the backend
+      const isValidProject = availableProjects.includes(urlProject);
+      if (isValidProject) {
+        setProjectName(urlProject);
+      } else if (availableProjects.length > 0 && !projectName) {
+        setProjectName(availableProjects[0]);
       }
+    } else if (availableProjects.length > 0 && !projectName) {
+      setProjectName(availableProjects[0]);
     }
-  }, [urlProject, availableProjectsData, teamProjectName]);
+  }, [urlProject, availableProjects, projectName]);
 
-  const updateProjectName = (name: string) => {
+  const updateProjectName = useCallback((name: string) => {
     setProjectName(name);
-  };
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set("project", name);
+      return next;
+    });
+  }, [setSearchParams]);
 
   return {
     projectName,
     setProjectName: updateProjectName,
-    availableProjects: availableProjectsData?.projects || [],
+    availableProjects,
     setSearchParams,
   };
 }
