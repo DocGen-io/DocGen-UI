@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Hash, Timer, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface TraceSummaryProps {
   summary: any | undefined;
   isError: boolean;
+  onViewTraces?: () => void;
 }
 
-export function TraceSummaryCard({ summary, isError }: TraceSummaryProps) {
+export function TraceSummaryCard({ summary, isError, onViewTraces }: TraceSummaryProps) {
   return (
     <Card className="border-border/60 shadow-sm">
       <CardHeader className="pb-4">
@@ -14,6 +16,16 @@ export function TraceSummaryCard({ summary, isError }: TraceSummaryProps) {
           <Zap className="h-4 w-4 text-primary" />
           AI Intelligence
         </CardTitle>
+        {onViewTraces && summary && (
+          <Button 
+            variant="link" 
+            size="sm" 
+            className="h-auto p-0 text-xs font-bold text-primary hover:text-primary/80"
+            onClick={onViewTraces}
+          >
+            View Details &rarr;
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {isError ? (
@@ -34,11 +46,17 @@ export function TraceSummaryCard({ summary, isError }: TraceSummaryProps) {
               </p>
               <p className="text-xl font-bold">{summary.total_tokens?.toLocaleString() || 0}</p>
             </div>
-            <div className="space-y-1 col-span-2">
+            <div className="space-y-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
                 <Timer className="h-3 w-3" /> Avg Latency
               </p>
-              <p className="text-xl font-bold">{summary.avg_latency_ms} ms</p>
+              <p className="text-xl font-bold">{summary.avg_latency_ms.toFixed(0)} ms</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+                <Zap className="h-3 w-3 text-primary" /> Total Cost
+              </p>
+              <p className="text-xl font-bold text-primary">${summary.total_cost.toFixed(4)}</p>
             </div>
           </div>
         ) : (
