@@ -3,10 +3,11 @@ import { endpointsApi } from "@/lib/api/endpoints";
 import { jobsApi } from "@/lib/api/jobs";
 import { toast } from "sonner";
 
-export function useAvailableProjects() {
+export function useAvailableProjects(teamId?: string) {
   return useQuery({
-    queryKey: ["available-projects"],
-    queryFn: () => endpointsApi.listProjects(),
+    queryKey: ["available-projects", teamId],
+    queryFn: () => endpointsApi.listProjects(teamId),
+    enabled: !!teamId, // Only fetch if teamId is available
   });
 }
 
