@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, Folder, Calendar } from "lucide-react";
+import { GitBranch, Folder, Calendar, Timer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Job } from "@/types";
+import { JobDuration } from "@/components/jobs/job-duration";
 
 interface JobInfoCardProps {
   job: Job;
@@ -39,15 +40,23 @@ export function JobInfoCard({ job }: JobInfoCardProps) {
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">
               Timeline
             </p>
-            <p className="font-medium text-sm">
-              Started
-              {job.created_at
-                ? new Date(job.created_at).toLocaleDateString([], {
-                    hour: "numeric",
-                    minute: "numeric",
-                  })
-                : "N/A"}
-            </p>
+            <div className="space-y-1">
+              <p className="font-medium text-sm">
+                Started
+                {job.created_at
+                  ? new Date(job.created_at).toLocaleDateString([], {
+                      hour: "numeric",
+                      minute: "numeric",
+                    })
+                  : "N/A"}
+              </p>
+              {job.status && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Timer className="h-3 w-3" />
+                  Time spent: <JobDuration createdAt={job.created_at} updatedAt={job.updated_at} status={job.status} className="font-bold text-foreground" />
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
