@@ -32,6 +32,57 @@ export function TracingConfigForm({
           onChange={(e) => onChange(["phoenix_data_dir"], e.target.value)}
         />
       </ConfigField>
+      <Separator />
+      <ConfigField label="Phoenix Host (Collector/API)" htmlFor="PHOENIX_HOST">
+        <Input
+          id="PHOENIX_HOST"
+          placeholder="http://localhost:6006"
+          value={config.PHOENIX_HOST || ""}
+          onChange={(e) => onChange(["PHOENIX_HOST"], e.target.value)}
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">
+          The public-facing URL of your Phoenix instance.
+        </p>
+      </ConfigField>
+
+      <Separator />
+
+      <div className="space-y-4">
+        <h4 className="text-sm font-bold flex items-center gap-2">
+          Dynamic Pricing (LLM)
+        </h4>
+        <div className="grid grid-cols-2 gap-4">
+          <ConfigField label="Input Cost (per 1M tokens)" htmlFor="prompt_cost_per_1m">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                id="prompt_cost_per_1m"
+                type="number"
+                step="0.0001"
+                className="pl-7"
+                value={config.prompt_cost_per_1m || 0}
+                onChange={(e) => onChange(["prompt_cost_per_1m"], parseFloat(e.target.value))}
+              />
+            </div>
+          </ConfigField>
+          <ConfigField label="Output Cost (per 1M tokens)" htmlFor="completion_cost_per_1m">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                id="completion_cost_per_1m"
+                type="number"
+                step="0.0001"
+                className="pl-7"
+                value={config.completion_cost_per_1m || 0}
+                onChange={(e) => onChange(["completion_cost_per_1m"], parseFloat(e.target.value))}
+              />
+            </div>
+          </ConfigField>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Costs configured here will override any hardcoded defaults and apply to all traces in this project.
+        </p>
+      </div>
     </ConfigSection>
   );
 }
