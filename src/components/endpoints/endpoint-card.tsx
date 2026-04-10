@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Eye, GitPullRequest } from "lucide-react";
+import { Eye, GitPullRequest, Stars } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { SpecViewerDialog } from "@/components/endpoints/spec-viewer-dialog";
 import { RevisionProposeDialog } from "@/components/endpoints/revision-propose-dialog";
+import { useProposeRevision } from "@/hooks/use-revisions";
+import { useGenerateExamples } from "@/hooks/use-endpoints";
+import { useTeamStore } from "@/stores/team-store";
 
 interface EndpointCardProps {
   ep: {
@@ -18,8 +21,12 @@ interface EndpointCardProps {
 }
 
 export function EndpointCard({ ep, projectName }: EndpointCardProps) {
+  const { activeTeam } = useTeamStore();
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  
+  const proposeMutation = useProposeRevision(activeTeam?.id || "");
+  const generateExamplesMutation = useGenerateExamples(projectName, activeTeam?.id || "");
 
   const methodColor =
     ep.method?.toUpperCase() === "GET"
@@ -92,13 +99,60 @@ export function EndpointCard({ ep, projectName }: EndpointCardProps) {
             <RevisionProposeDialog
               name={ep.name!!}
               data={ep.data}
-              onSave={(val) => {
-                console.log("Saving revision:", val);
-                setIsEditOpen(false);
-                toast.success("Revision proposal submitted");
+              onSave={async (val) => {
+                if (!activeTeam) {
+                  toast.error("Please select a team first");
+                  return;
+                }
+                
+                try {
+                  await proposeMutation.mutateAsync({
+                    endpoint_id: ep.path, // Using path as ID for now or ep.name if it matches
+                    file_path: projectName, // Project name used as file_path context
+                    action: "modify",
+                    original_content: JSON.stringify(ep.data, null, 2),
+                    proposed_content: JSON.stringify(val, null, 2),
+                  });
+                  setIsEditOpen(false);
+                } catch (err) {
+                  // toast already handled in hook
+                }
               }}
             />
           </Dialog>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full h-8 text-[11px] font-bold tracking-tight text-muted-foreground hover:text-emerald-500 hover:bg-emerald-500/10 transition-all border border-transparent hover:border-emerald-500/20"
+            onClick={() => {
+              if (!activeTeam) {
+                toast.error("Please select a team first");
+                return;
+              }
+              const swaggerData = {
+                paths: {
+                  [ep.path]: {
+                    [ep.method.toLowerCase()]: ep.data
+                  }
+                }
+              };
+              generateExamplesMutation.mutate(swaggerData);
+            }}
+            disabled={generateExamplesMutation.isPending}
+          >
+            {generateExamplesMutation.isPending ? (
+              <span className="flex items-center">
+                <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
+                Wait...
+              </span>
+            ) : (
+              <>
+                <Stars className="w-3 h-3 mr-1.5" />
+                Gen Examples
+              </>
+            )}
+          </Button>
         </div>
       </CardContent>
     </Card>

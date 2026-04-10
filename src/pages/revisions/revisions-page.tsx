@@ -36,9 +36,9 @@ export function RevisionsPage() {
 
   const counts = {
     all: revisions?.length || 0,
-    pending: revisions?.filter((r) => r.status === "pending").length || 0,
-    approved: revisions?.filter((r) => r.status === "approved").length || 0,
-    rejected: revisions?.filter((r) => r.status === "rejected").length || 0,
+    pending: revisions?.filter((r) => r.status === "PENDING").length || 0,
+    approved: revisions?.filter((r) => r.status === "APPROVED").length || 0,
+    rejected: revisions?.filter((r) => r.status === "REJECTED").length || 0,
   };
 
   return (
@@ -72,7 +72,7 @@ export function RevisionsPage() {
               </span>
             </TabsTrigger>
             <TabsTrigger
-              value="pending"
+              value="PENDING"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
               Pending{" "}
@@ -81,7 +81,7 @@ export function RevisionsPage() {
               </span>
             </TabsTrigger>
             <TabsTrigger
-              value="approved"
+              value="APPROVED"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
               Approved{" "}
@@ -90,7 +90,7 @@ export function RevisionsPage() {
               </span>
             </TabsTrigger>
             <TabsTrigger
-              value="rejected"
+              value="REJECTED"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
               Rejected{" "}

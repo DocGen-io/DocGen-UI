@@ -35,6 +35,8 @@ export function JobDetailsPage() {
   const { data: revisions } = useRevisions(activeTeam?.id, undefined, jobId);
   const { data: traceData, isError: traceError } = useTracesForJob(jobId);
 
+  console.log(traceData);
+
   const job = jobResponse?.job;
   const allLogs = useMergedLogs(jobResponse?.logs, realtimeLogs);
 
