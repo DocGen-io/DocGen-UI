@@ -44,11 +44,12 @@ export function EndpointsPage() {
 
   // Data fetching
   const { data: endpointsData, isLoading: isLoadingEndpoints } =
-    useEndpoints(projectName);
+    useEndpoints(projectName, activeTeam?.id);
   const { data: searchJobStatus } = useSearchJob(searchJobId);
   const { data: clusterJobStatus } = useClusterJob(clusterJobId);
 
   useEffect(() => {
+    console.log(endpointsData)
     if (
       searchJobStatus?.job?.status === "completed" &&
       searchJobStatus.job.result
@@ -56,7 +57,7 @@ export function EndpointsPage() {
       setSearchResult(searchJobStatus.job.result);
       setActiveTab("query");
     }
-  }, [searchJobStatus]);
+  }, [searchJobStatus, endpointsData]);
 
   useEffect(() => {
     if (
@@ -94,6 +95,7 @@ export function EndpointsPage() {
 
   const endpoints = useMemo(() => {
     if (!endpointsData?.endpoints) return [];
+
     return Object.entries(endpointsData.endpoints).flatMap(
       ([path, pathItem]: [string, any]) =>
         Object.entries(pathItem).map(([method, data]: [string, any]) => ({
