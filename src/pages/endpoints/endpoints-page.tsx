@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/shared/page-header";
-import { Loader2, LayoutGrid, Sparkles, Bug } from "lucide-react";
+import { LayoutGrid, Sparkles, Bug } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router";
@@ -11,6 +11,7 @@ import { EndpointSearch } from "@/components/endpoints/endpoint-search";
 import { EndpointActions } from "@/components/endpoints/endpoint-actions";
 import { ClusterList } from "@/components/endpoints/cluster-list";
 import { SearchResults } from "@/components/endpoints/search-results";
+import { EndpointSkeleton } from "@/components/endpoints/endpoint-skeleton";
 
 import {
   useEndpoints,
@@ -20,6 +21,7 @@ import {
   useClustering,
   useRerunPipeline,
   useAvailableProjects,
+  useGrouping,
 } from "@/hooks/use-endpoints";
 import { useProjectDiscovery } from "@/hooks/use-project-discovery";
 
@@ -47,9 +49,9 @@ export function EndpointsPage() {
     useEndpoints(projectName, activeTeam?.id);
   const { data: searchJobStatus } = useSearchJob(searchJobId);
   const { data: clusterJobStatus } = useClusterJob(clusterJobId);
+  const { data: persistedGrouping, isLoading: isLoadingGrouping } = useGrouping(projectName, activeTeam?.id);
 
   useEffect(() => {
-    console.log(endpointsData)
     if (
       searchJobStatus?.job?.status === "completed" &&
       searchJobStatus.job.result
@@ -57,7 +59,7 @@ export function EndpointsPage() {
       setSearchResult(searchJobStatus.job.result);
       setActiveTab("query");
     }
-  }, [searchJobStatus, endpointsData]);
+  }, [searchJobStatus]);
 
   useEffect(() => {
     if (
@@ -68,6 +70,20 @@ export function EndpointsPage() {
       setActiveTab("clusters");
     }
   }, [clusterJobStatus]);
+
+  // Combined grouping state
+  const activeGrouping = useMemo(() => {
+    if (clusterResult?.clusters) return clusterResult.clusters;
+    if (persistedGrouping?.clusters) return persistedGrouping.clusters;
+    return null;
+  }, [clusterResult, persistedGrouping]);
+
+  // Auto-switch to groups if they exist and we are on "all"
+  useEffect(() => {
+    if (activeGrouping && activeTab === "all") {
+      setActiveTab("clusters");
+    }
+  }, [activeGrouping]);
 
   const semanticSearch = useSemanticSearch(projectName, activeTeam?.id || "");
   const clustering = useClustering(projectName, activeTeam?.id || "");
@@ -102,6 +118,7 @@ export function EndpointsPage() {
           path,
           method,
           data,
+          nodeId: data["x-node-id"],
           name: data.operationId || data.summary || `${method} ${path}`,
         })),
     );
@@ -166,7 +183,7 @@ export function EndpointsPage() {
             </TabsTrigger>
             <TabsTrigger
               value="clusters"
-              disabled={!clusterResult}
+              disabled={!activeGrouping}
               className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all flex items-center gap-2 whitespace-nowrap"
             >
               <LayoutGrid className="w-4 h-4" /> Groups
@@ -175,12 +192,7 @@ export function EndpointsPage() {
 
           <TabsContent value="all" className="mt-8">
             {isLoadingEndpoints ? (
-              <div className="py-24 flex flex-col items-center gap-4">
-                <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
-                <p className="text-muted-foreground animate-pulse font-medium">
-                  Scanning infrastructure for endpoints...
-                </p>
-              </div>
+              <EndpointSkeleton />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {endpoints.map((ep, i) => (
@@ -204,11 +216,24 @@ export function EndpointsPage() {
           </TabsContent>
 
           <TabsContent value="clusters" className="mt-8">
-            {clusterResult && (
+            {isLoadingGrouping ? (
+              <EndpointSkeleton />
+            ) : activeGrouping ? (
               <ClusterList
-                clusters={clusterResult.clusters || {}}
+                clusters={activeGrouping}
+                endpoints={endpoints}
                 projectName={projectName}
               />
+            ) : (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <LayoutGrid className="w-10 h-10 text-muted-foreground/30" />
+                <p className="text-muted-foreground font-medium">
+                  No semantic groups found for this project.
+                </p>
+                <Button variant="outline" onClick={handleClustering}>
+                  Analyze & Group Endpoints
+                </Button>
+              </div>
             )}
           </TabsContent>
         </Tabs>
