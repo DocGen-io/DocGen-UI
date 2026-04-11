@@ -11,11 +11,28 @@ export function useAvailableProjects(teamId?: string) {
   });
 }
 
-export function useEndpoints(projectName: string) {
+export function useEndpoints(projectName: string, teamId: string | undefined) {
+  const listingJob = useQuery({
+    queryKey: ["endpoints-job-trigger", projectName, teamId],
+    queryFn: () => endpointsApi.listEndpoints(projectName, teamId!),
+    enabled: !!projectName && !!teamId,
+    staleTime: 30000, // Don't re-trigger too often
+  });
+
+  const jobId = listingJob.data?.id;
+
   return useQuery({
-    queryKey: ["endpoints", projectName],
-    queryFn: () => endpointsApi.listEndpoints(projectName),
-    enabled: !!projectName,
+    queryKey: ["endpoints", projectName, jobId],
+    queryFn: () => jobsApi.getUniversalStatus(jobId!),
+    enabled: !!jobId,
+    refetchInterval: (query) =>
+      query.state.data?.job?.status === "completed" ||
+      query.state.data?.job?.status === "failed"
+        ? false
+        : 1000,
+    select: (data) => ({
+      endpoints: data.job?.result?.endpoints || {},
+    }),
   });
 }
 
@@ -80,12 +97,25 @@ export function useRerunPipeline(
 
 export function useGenerateExamples(projectName: string, teamId: string) {
   return useMutation({
-    mutationFn: (swaggerData: any) =>
-      endpointsApi.generateExamples(projectName, teamId, swaggerData),
+    mutationFn: ({ path, method }: { path: string; method: string }) =>
+      endpointsApi.generateExamples(projectName, teamId, path, method),
     onSuccess: () => {
       toast.success("Example generation job started");
     },
     onError: (err: any) =>
       toast.error(`Failed to start example generation: ${err.message}`),
+  });
+}
+
+export function useExampleJob(jobId: string | null) {
+  return useQuery({
+    queryKey: ["example-job", jobId],
+    queryFn: () => jobsApi.getUniversalStatus(jobId!),
+    enabled: !!jobId,
+    refetchInterval: (query) =>
+      query.state.data?.job?.status === "completed" ||
+      query.state.data?.job?.status === "failed"
+        ? false
+        : 1500, // Faster polling for examples
   });
 }
