@@ -12,8 +12,10 @@ export interface Cluster {
 }
 
 export const endpointsApi = {
-  listEndpoints: async (projectName: string) => {
-    const res = await api.get<any>(`/endpoints/${projectName}`);
+  listEndpoints: async (projectName: string, teamId: string) => {
+    const res = await api.get<any>(
+      `/endpoints/${projectName}?team_id=${encodeURIComponent(teamId)}`,
+    );
     return res;
   },
 
@@ -45,10 +47,15 @@ export const endpointsApi = {
     return res;
   },
 
-  generateExamples: async (projectName: string, team_id: string, swaggerData: any) => {
+  generateExamples: async (
+    projectName: string, 
+    teamId: string, 
+    path: string, 
+    method: string
+  ) => {
     const res = await api.post<any>(
-      `/endpoints/${projectName}/examples?team_id=${encodeURIComponent(team_id)}`,
-      swaggerData,
+      `/endpoints/${projectName}/examples?team_id=${encodeURIComponent(teamId)}`,
+      { path, method },
     );
     return res;
   },
