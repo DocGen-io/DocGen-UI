@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/shared/page-header";
-import { LayoutGrid, Sparkles, Bug } from "lucide-react";
+import { LayoutGrid, Sparkles, Bug, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router";
@@ -89,21 +89,45 @@ export function EndpointsPage() {
   const clustering = useClustering(projectName, activeTeam?.id || "");
   const rerunPipeline = useRerunPipeline(projectName, activeTeam?.id);
 
+  // ── Derived "is running" states ──────────────────────────────────
+  // These combine the initial mutation pending state with the background
+  // job polling phase so buttons stay disabled & spinners stay visible
+  // for the ENTIRE lifecycle of the operation.
+  const isSearchRunning = useMemo(() => {
+    if (semanticSearch.isPending) return true;
+    if (searchJobId && !searchResult) {
+      // Still polling — check if the job hasn't completed or failed yet
+      const status = searchJobStatus?.job?.status;
+      return !status || (status !== "completed" && status !== "failed");
+    }
+    return false;
+  }, [semanticSearch.isPending, searchJobId, searchResult, searchJobStatus]);
+
+  const isClusteringRunning = useMemo(() => {
+    if (clustering.isPending) return true;
+    if (clusterJobId && !clusterResult) {
+      const status = clusterJobStatus?.job?.status;
+      return !status || (status !== "completed" && status !== "failed");
+    }
+    return false;
+  }, [clustering.isPending, clusterJobId, clusterResult, clusterJobStatus]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() || isSearchRunning) return;
     semanticSearch.mutate(searchQuery, {
       onSuccess: (data: any) => {
-        setSearchJobId(data.job_id);
+        setSearchJobId(data.id);
         setSearchResult(null);
       },
     });
   };
 
   const handleClustering = () => {
+    if (isClusteringRunning) return;
     clustering.mutate(undefined, {
       onSuccess: (data: any) => {
-        setClusterJobId(data.job_id);
+        setClusterJobId(data.id);
         setClusterResult(null);
       },
     });
@@ -147,7 +171,7 @@ export function EndpointsPage() {
           </Button>
           <EndpointActions
             onCluster={handleClustering}
-            isClustering={clustering.isPending}
+            isClustering={isClusteringRunning}
             onRerun={() => rerunPipeline.mutate()}
             isRerunning={rerunPipeline.isPending}
           />
@@ -159,7 +183,7 @@ export function EndpointsPage() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onSearch={handleSearch}
-          isSearching={semanticSearch.isPending}
+          isSearching={isSearchRunning}
         />
 
         <Tabs
@@ -176,17 +200,27 @@ export function EndpointsPage() {
             </TabsTrigger>
             <TabsTrigger
               value="query"
-              disabled={!searchResult}
+              disabled={!searchResult && !isSearchRunning}
               className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all flex items-center gap-2 whitespace-nowrap"
             >
-              <Sparkles className="w-4 h-4" /> AI Search Results
+              {isSearchRunning ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+              {isSearchRunning ? "Searching…" : "AI Search Results"}
             </TabsTrigger>
             <TabsTrigger
               value="clusters"
-              disabled={!activeGrouping}
+              disabled={!activeGrouping && !isClusteringRunning}
               className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all flex items-center gap-2 whitespace-nowrap"
             >
-              <LayoutGrid className="w-4 h-4" /> Groups
+              {isClusteringRunning ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <LayoutGrid className="w-4 h-4" />
+              )}
+              {isClusteringRunning ? "Grouping…" : "Groups"}
             </TabsTrigger>
           </TabsList>
 
@@ -207,16 +241,30 @@ export function EndpointsPage() {
           </TabsContent>
 
           <TabsContent value="query" className="mt-8">
-            {searchResult && (
+            {isSearchRunning ? (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-muted-foreground font-medium">
+                  Searching endpoints semantically…
+                </p>
+              </div>
+            ) : searchResult ? (
               <SearchResults
                 results={searchResult.results || []}
                 projectName={projectName}
               />
-            )}
+            ) : null}
           </TabsContent>
 
           <TabsContent value="clusters" className="mt-8">
-            {isLoadingGrouping ? (
+            {isClusteringRunning ? (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-muted-foreground font-medium">
+                  Analyzing and grouping endpoints…
+                </p>
+              </div>
+            ) : isLoadingGrouping ? (
               <EndpointSkeleton />
             ) : activeGrouping ? (
               <ClusterList

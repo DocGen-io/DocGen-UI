@@ -8,7 +8,6 @@ interface ClusterListProps {
 }
 
 export function ClusterList({ clusters, endpoints, projectName }: ClusterListProps) {
-
   return (
     <div className="space-y-12">
       {Object.entries(clusters).map(([groupName, ids]) => {

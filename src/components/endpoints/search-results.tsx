@@ -7,7 +7,6 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({ results, projectName }: SearchResultsProps) {
-  console.log(results);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {results.map((res: any, i: number) => (
