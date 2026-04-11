@@ -119,3 +119,12 @@ export function useExampleJob(jobId: string | null) {
         : 1500, // Faster polling for examples
   });
 }
+
+export function useGrouping(projectName: string, teamId: string | undefined) {
+  return useQuery({
+    queryKey: ["grouping", projectName, teamId],
+    queryFn: () => endpointsApi.getGrouping(projectName, teamId!),
+    enabled: !!projectName && !!teamId,
+    staleTime: 60000,
+  });
+}

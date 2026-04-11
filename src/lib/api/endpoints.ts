@@ -59,4 +59,11 @@ export const endpointsApi = {
     );
     return res;
   },
+  
+  getGrouping: async (projectName: string, teamId: string) => {
+    const res = await api.get<{ clusters: Record<string, string[]> | null }>(
+      `/endpoints/${projectName}/grouping?team_id=${encodeURIComponent(teamId)}`,
+    );
+    return res;
+  },
 };
