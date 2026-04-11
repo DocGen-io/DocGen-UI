@@ -19,6 +19,7 @@ export interface Job {
   submitted_by?: string;
   source_type: string;
   path: string;
+  project_name?: string;
   api_dir?: string;
   status: JobStatus;
   result?: Record<string, any>;
@@ -30,6 +31,7 @@ export interface Job {
 export interface CreateJobRequest {
   source_type: string;
   path: string;
+  project_name?: string;
   credentials?: string;
   api_dir?: string;
 }

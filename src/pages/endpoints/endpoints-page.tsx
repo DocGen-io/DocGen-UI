@@ -1,14 +1,17 @@
-import { useState, useMemo, useEffect } from 'react';
-import { PageHeader } from '@/components/shared/page-header';
-import { Loader2, LayoutGrid, Sparkles } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useTeamStore } from '@/stores/team-store';
-import { EndpointCard } from '@/components/endpoints/endpoint-card';
-import { ProjectSelector } from '@/components/endpoints/project-selector';
-import { EndpointSearch } from '@/components/endpoints/endpoint-search';
-import { EndpointActions } from '@/components/endpoints/endpoint-actions';
-import { ClusterList } from '@/components/endpoints/cluster-list';
-import { SearchResults } from '@/components/endpoints/search-results';
+import { useState, useMemo, useEffect } from "react";
+import { PageHeader } from "@/components/shared/page-header";
+import { LayoutGrid, Sparkles, Bug, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { useNavigate, useSearchParams } from "react-router";
+import { useTeamStore } from "@/stores/team-store";
+import { EndpointCard } from "@/components/endpoints/endpoint-card";
+import { ProjectSelector } from "@/components/endpoints/project-selector";
+import { EndpointSearch } from "@/components/endpoints/endpoint-search";
+import { EndpointActions } from "@/components/endpoints/endpoint-actions";
+import { ClusterList } from "@/components/endpoints/cluster-list";
+import { SearchResults } from "@/components/endpoints/search-results";
+import { EndpointSkeleton } from "@/components/endpoints/endpoint-skeleton";
 
 import {
   useEndpoints,
@@ -16,78 +19,132 @@ import {
   useClusterJob,
   useSemanticSearch,
   useClustering,
-  useRerunPipeline
-} from '@/hooks/use-endpoints';
-import { useProjectDiscovery } from '@/hooks/use-project-discovery';
+  useRerunPipeline,
+  useAvailableProjects,
+  useGrouping,
+} from "@/hooks/use-endpoints";
+import { useProjectDiscovery } from "@/hooks/use-project-discovery";
 
 export function EndpointsPage() {
   const { activeTeam } = useTeamStore();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'query' | 'clusters'>('all');
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | "query" | "clusters">(
+    "all",
+  );
   const [searchJobId, setSearchJobId] = useState<string | null>(null);
   const [clusterJobId, setClusterJobId] = useState<string | null>(null);
   const [searchResult, setSearchResult] = useState<any>(null);
   const [clusterResult, setClusterResult] = useState<any>(null);
 
-  const {
-    projectName,
-    setProjectName,
-    availableProjects,
-    setSearchParams
-  } = useProjectDiscovery(activeTeam?.name);
+  const { data: projectsData } = useAvailableProjects(activeTeam?.id);
+  const availableProjects = useMemo(() => projectsData?.projects || [], [projectsData]);
+
+  const { projectName, setProjectName } =
+    useProjectDiscovery(availableProjects);
+
 
   // Data fetching
-  const { data: endpointsData, isLoading: isLoadingEndpoints } = useEndpoints(projectName);
+  const { data: endpointsData, isLoading: isLoadingEndpoints } =
+    useEndpoints(projectName, activeTeam?.id);
   const { data: searchJobStatus } = useSearchJob(searchJobId);
   const { data: clusterJobStatus } = useClusterJob(clusterJobId);
+  const { data: persistedGrouping, isLoading: isLoadingGrouping } = useGrouping(projectName, activeTeam?.id);
 
   useEffect(() => {
-    if (searchJobStatus?.job?.status === 'completed' && searchJobStatus.job.result) {
+    if (
+      searchJobStatus?.job?.status === "completed" &&
+      searchJobStatus.job.result
+    ) {
       setSearchResult(searchJobStatus.job.result);
-      setActiveTab('query');
+      setActiveTab("query");
     }
   }, [searchJobStatus]);
 
   useEffect(() => {
-    if (clusterJobStatus?.job?.status === 'completed' && clusterJobStatus.job.result) {
+    if (
+      clusterJobStatus?.job?.status === "completed" &&
+      clusterJobStatus.job.result
+    ) {
       setClusterResult(clusterJobStatus.job.result);
-      setActiveTab('clusters');
+      setActiveTab("clusters");
     }
   }, [clusterJobStatus]);
 
-  const semanticSearch = useSemanticSearch(projectName);
-  const clustering = useClustering(projectName);
+  // Combined grouping state
+  const activeGrouping = useMemo(() => {
+    if (clusterResult?.clusters) return clusterResult.clusters;
+    if (persistedGrouping?.clusters) return persistedGrouping.clusters;
+    return null;
+  }, [clusterResult, persistedGrouping]);
+
+  // Auto-switch to groups if they exist and we are on "all"
+  useEffect(() => {
+    if (activeGrouping && activeTab === "all") {
+      setActiveTab("clusters");
+    }
+  }, [activeGrouping]);
+
+  const semanticSearch = useSemanticSearch(projectName, activeTeam?.id || "");
+  const clustering = useClustering(projectName, activeTeam?.id || "");
   const rerunPipeline = useRerunPipeline(projectName, activeTeam?.id);
+
+  // ── Derived "is running" states ──────────────────────────────────
+  // These combine the initial mutation pending state with the background
+  // job polling phase so buttons stay disabled & spinners stay visible
+  // for the ENTIRE lifecycle of the operation.
+  const isSearchRunning = useMemo(() => {
+    if (semanticSearch.isPending) return true;
+    if (searchJobId && !searchResult) {
+      // Still polling — check if the job hasn't completed or failed yet
+      const status = searchJobStatus?.job?.status;
+      return !status || (status !== "completed" && status !== "failed");
+    }
+    return false;
+  }, [semanticSearch.isPending, searchJobId, searchResult, searchJobStatus]);
+
+  const isClusteringRunning = useMemo(() => {
+    if (clustering.isPending) return true;
+    if (clusterJobId && !clusterResult) {
+      const status = clusterJobStatus?.job?.status;
+      return !status || (status !== "completed" && status !== "failed");
+    }
+    return false;
+  }, [clustering.isPending, clusterJobId, clusterResult, clusterJobStatus]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() || isSearchRunning) return;
     semanticSearch.mutate(searchQuery, {
       onSuccess: (data: any) => {
-        setSearchJobId(data.job_id);
+        setSearchJobId(data.id);
         setSearchResult(null);
-      }
+      },
     });
   };
 
   const handleClustering = () => {
+    if (isClusteringRunning) return;
     clustering.mutate(undefined, {
       onSuccess: (data: any) => {
-        setClusterJobId(data.job_id);
+        setClusterJobId(data.id);
         setClusterResult(null);
-      }
+      },
     });
   };
 
   const endpoints = useMemo(() => {
     if (!endpointsData?.endpoints) return [];
-    return Object.entries(endpointsData.endpoints).flatMap(([path, pathItem]: [string, any]) =>
-      Object.entries(pathItem).map(([method, data]: [string, any]) => ({
-        path,
-        method,
-        data,
-        name: data.operationId || data.summary || `${method} ${path}`
-      }))
+
+    return Object.entries(endpointsData.endpoints).flatMap(
+      ([path, pathItem]: [string, any]) =>
+        Object.entries(pathItem).map(([method, data]: [string, any]) => ({
+          path,
+          method,
+          data,
+          nodeId: data["x-node-id"],
+          name: data.operationId || data.summary || `${method} ${path}`,
+        })),
     );
   }, [endpointsData]);
 
@@ -103,11 +160,18 @@ export function EndpointsPage() {
             projectName={projectName}
             setProjectName={setProjectName}
             availableProjects={availableProjects}
-            setSearchParams={setSearchParams}
           />
+          <Button
+            variant="outline"
+            className="h-10 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 font-bold gap-2"
+            onClick={() => navigate(`/traces?project=${projectName}`)}
+          >
+            <Bug className="w-4 h-4" />
+            View Traces
+          </Button>
           <EndpointActions
             onCluster={handleClustering}
-            isClustering={clustering.isPending}
+            isClustering={isClusteringRunning}
             onRerun={() => rerunPipeline.mutate()}
             isRerunning={rerunPipeline.isPending}
           />
@@ -119,50 +183,105 @@ export function EndpointsPage() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onSearch={handleSearch}
-          isSearching={semanticSearch.isPending}
+          isSearching={isSearchRunning}
         />
 
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v: any) => setActiveTab(v)}
+          className="w-full"
+        >
           <TabsList className="justify-start h-12 bg-transparent border-b rounded-none w-full gap-4 sm:gap-8 p-0 overflow-x-auto overflow-y-hidden custom-scrollbar">
-            <TabsTrigger value="all" className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all whitespace-nowrap">All Endpoints</TabsTrigger>
-            <TabsTrigger value="query" disabled={!searchResult} className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all flex items-center gap-2 whitespace-nowrap">
-              <Sparkles className="w-4 h-4" /> AI Search Results
+            <TabsTrigger
+              value="all"
+              className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all whitespace-nowrap"
+            >
+              All Endpoints
             </TabsTrigger>
-            <TabsTrigger value="clusters" disabled={!clusterResult} className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all flex items-center gap-2 whitespace-nowrap">
-              <LayoutGrid className="w-4 h-4" /> Groups
+            <TabsTrigger
+              value="query"
+              disabled={!searchResult && !isSearchRunning}
+              className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all flex items-center gap-2 whitespace-nowrap"
+            >
+              {isSearchRunning ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
+              {isSearchRunning ? "Searching…" : "AI Search Results"}
+            </TabsTrigger>
+            <TabsTrigger
+              value="clusters"
+              disabled={!activeGrouping && !isClusteringRunning}
+              className="data-[state=active]:border-primary data-[state=active]:text-primary border-b-2 border-transparent rounded-none h-full px-4 font-bold transition-all flex items-center gap-2 whitespace-nowrap"
+            >
+              {isClusteringRunning ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <LayoutGrid className="w-4 h-4" />
+              )}
+              {isClusteringRunning ? "Grouping…" : "Groups"}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-8">
             {isLoadingEndpoints ? (
-              <div className="py-24 flex flex-col items-center gap-4">
-                <Loader2 className="w-10 h-10 animate-spin text-primary/50" />
-                <p className="text-muted-foreground animate-pulse font-medium">Scanning infrastructure for endpoints...</p>
-              </div>
+              <EndpointSkeleton />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {endpoints.map((ep, i) => (
-                  <EndpointCard key={`${ep.path}-${ep.method}-${i}`} ep={ep} projectName={projectName} />
+                  <EndpointCard
+                    key={`${ep.path}-${ep.method}-${i}`}
+                    ep={ep}
+                    projectName={projectName}
+                  />
                 ))}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="query" className="mt-8">
-            {searchResult && (
-              <SearchResults 
-                results={searchResult.results || []} 
-                projectName={projectName} 
+            {isSearchRunning ? (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-muted-foreground font-medium">
+                  Searching endpoints semantically…
+                </p>
+              </div>
+            ) : searchResult ? (
+              <SearchResults
+                results={searchResult.results || []}
+                projectName={projectName}
               />
-            )}
+            ) : null}
           </TabsContent>
 
           <TabsContent value="clusters" className="mt-8">
-            {clusterResult && (
-              <ClusterList 
-                clusters={clusterResult.clusters || {}} 
-                projectName={projectName} 
+            {isClusteringRunning ? (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <p className="text-muted-foreground font-medium">
+                  Analyzing and grouping endpoints…
+                </p>
+              </div>
+            ) : isLoadingGrouping ? (
+              <EndpointSkeleton />
+            ) : activeGrouping ? (
+              <ClusterList
+                clusters={activeGrouping}
+                endpoints={endpoints}
+                projectName={projectName}
               />
+            ) : (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <LayoutGrid className="w-10 h-10 text-muted-foreground/30" />
+                <p className="text-muted-foreground font-medium">
+                  No semantic groups found for this project.
+                </p>
+                <Button variant="outline" onClick={handleClustering}>
+                  Analyze & Group Endpoints
+                </Button>
+              </div>
             )}
           </TabsContent>
         </Tabs>

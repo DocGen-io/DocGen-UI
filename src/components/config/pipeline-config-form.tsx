@@ -5,6 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { ConfigSection } from "@/components/config/config-section";
 import { ConfigField } from "@/components/config/config-field";
 
@@ -54,6 +55,23 @@ export function PipelineConfigForm({
             </SelectContent>
           </Select>
         </ConfigField>
+      </div>
+
+      <div className="mt-8 border-t pt-8">
+        <div className="flex items-center justify-between p-4 rounded-xl border border-primary/10 bg-primary/5">
+          <div className="space-y-1">
+            <h4 className="font-bold text-primary">Automatic Semantic Grouping</h4>
+            <p className="text-sm text-primary/60 max-w-lg">
+              When enabled, endpoints will be automatically analyzed and grouped into semantic clusters during the documentation pipeline.
+            </p>
+          </div>
+          <Switch
+            checked={!!config.process_grouping_automatically}
+            onCheckedChange={(checked) =>
+              onChange(["process_grouping_automatically"], checked)
+            }
+          />
+        </div>
       </div>
     </ConfigSection>
   );

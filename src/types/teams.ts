@@ -63,6 +63,9 @@ export interface TeamConfig {
     documentation_style?: string;
     auto_approve_threshold?: number;
     webhook_url?: string;
+    PHOENIX_HOST?: string;
+    prompt_cost_per_1m?: number;
+    completion_cost_per_1m?: number;
   };
   created_at: string;
   updated_at: string;
@@ -77,4 +80,7 @@ export interface UpdateTeamConfigRequest {
   documentation_style?: string;
   auto_approve_threshold?: number;
   webhook_url?: string;
+  PHOENIX_HOST?: string;
+  prompt_cost_per_1m?: number;
+  completion_cost_per_1m?: number;
 }

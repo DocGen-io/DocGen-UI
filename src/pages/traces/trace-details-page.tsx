@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from 'react-router';
-import { useTrace } from '@/hooks/use-traces';
+import { useProjectTraces } from '@/hooks/use-phoenix';
+import { useTeamStore } from '@/stores/team-store';
+import { useProjectDiscovery } from '@/hooks/use-project-discovery';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Bug, Search } from 'lucide-react';
@@ -8,10 +10,12 @@ import { EmptyState } from '@/components/shared/empty-state';
 export function TraceDetailsPage() {
   const { traceId } = useParams<{ traceId: string }>();
   const navigate = useNavigate();
-  const { isLoading } = useTrace(undefined, traceId);
+  const { activeTeam } = useTeamStore();
+  const { projectName } = useProjectDiscovery();
+  const { isLoading } = useProjectTraces(activeTeam, projectName);
 
   if (isLoading) {
-    return <div className="p-8 flex items-center justify-center h-full">Loading telemetry...</div>;
+    return <div className="p-8 flex items-center justify-center h-full text-muted-foreground animate-pulse">Loading telemetry...</div>;
   }
 
   return (
@@ -33,10 +37,10 @@ export function TraceDetailsPage() {
           title="Direct Trace Access Limited"
           description="Individual trace spans are now grouped within their respective Documentation Jobs for better context and correlation."
         />
-        
+
         <div className="flex flex-col items-center gap-4 pt-4">
           <p className="text-sm text-muted-foreground max-w-sm">
-            To inspect the specific LLM interactions for ID <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">{traceId}</code>, 
+            To inspect the specific LLM interactions for ID <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">{traceId}</code>,
             please visit the **Job Details** page of the job that initiated this request.
           </p>
           <div className="flex gap-3">
@@ -49,7 +53,7 @@ export function TraceDetailsPage() {
           </div>
         </div>
       </div>
-      
+
       <div className="p-6 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-4">
         <div className="p-2 bg-primary/10 rounded-lg">
           <Bug className="h-5 w-5 text-primary" />
@@ -57,7 +61,7 @@ export function TraceDetailsPage() {
         <div className="space-y-1">
           <h4 className="text-sm font-bold text-primary">Why did this change?</h4>
           <p className="text-xs text-primary/70 leading-relaxed">
-            We've modernized our observability stack to provide a more holistic view of the documentation generation process. 
+            We've modernized our observability stack to provide a more holistic view of the documentation generation process.
             By grouping traces by job, you can see how individual AI steps contribute to the overall documentation outcome.
           </p>
         </div>

@@ -9,23 +9,24 @@ import type { Job } from "@/types";
 interface JobArtifactsCardProps {
   job: Job;
   revisions: any[] | undefined;
-  activeTeamName?: string;
 }
 
 export function JobArtifactsCard({
   job,
   revisions,
-  activeTeamName,
 }: JobArtifactsCardProps) {
   const navigate = useNavigate();
 
   const handleReviewEndpoints = () => {
-    const projectNameFromPath = job.path ? job.path.split("/").pop() : "";
-    const projectName =
-      projectNameFromPath ||
-      activeTeamName?.toLowerCase().replace(/\s+/g, "-") ||
-      "default-project";
-    navigate(`/endpoints?project=${projectName}`);
+    // 1. Try to extract project name from job path (e.g., "/tmp/Dartsee" -> "Dartsee")
+    const projectNameFromPath = job.path ? job.path.replace(/\/$/, "").split("/").pop() : "";
+
+    // 2. Determing final project name for navigation
+    const projectName = projectNameFromPath || "default";
+
+    // 3. Navigate with both project and job context
+    // This ensures specific job results can be highlighted if supported
+    navigate(`/endpoints?project=${projectName}&job=${job.id}`);
   };
 
   return (

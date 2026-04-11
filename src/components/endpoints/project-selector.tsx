@@ -10,14 +10,12 @@ interface ProjectSelectorProps {
   projectName: string;
   setProjectName: (name: string) => void;
   availableProjects: string[];
-  setSearchParams: (params: { project: string }) => void;
 }
 
 export function ProjectSelector({
   projectName,
   setProjectName,
   availableProjects,
-  setSearchParams,
 }: ProjectSelectorProps) {
   if (!availableProjects || availableProjects.length === 0) return null;
 
@@ -31,7 +29,6 @@ export function ProjectSelector({
         onValueChange={(val) => {
           if (!val) return;
           setProjectName(val);
-          setSearchParams({ project: val });
         }}
       >
         <SelectTrigger className="w-full sm:w-[220px] bg-card/50 backdrop-blur-sm border-primary/20 h-10 px-4 rounded-xl shadow-lg shadow-primary/5">

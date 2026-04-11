@@ -7,14 +7,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GitBranch, Folder, Loader2, AlertCircle } from "lucide-react";
 import { useCreateJob } from "@/hooks/use-jobs";
 import { useTeamStore } from "@/stores/team-store";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { JobType } from "@/types";
+import { GitSourceFields } from "@/components/jobs/create-job/git-source-fields";
+import { LocalSourceFields } from "@/components/jobs/create-job/local-source-fields";
+import { AdvancedJobOptions } from "@/components/jobs/create-job/advanced-job-options";
 
 interface CreateJobDialogProps {
   open: boolean;
@@ -30,7 +31,12 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
     branch: "main",
     localPath: "",
     apiDir: "",
+    projectName: "",
   });
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +46,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
       {
         source_type: jobType,
         path: jobType === "git" ? formData.repositoryUrl : formData.localPath,
+        project_name: formData.projectName || undefined,
         api_dir: formData.apiDir || undefined,
       },
       {
@@ -50,6 +57,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
             branch: "main",
             localPath: "",
             apiDir: "",
+            projectName: "",
           });
         },
       },
@@ -60,7 +68,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] gap-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl">
+          <DialogTitle className="text-2xl font-bold">
             Create Documentation Job
           </DialogTitle>
           <DialogDescription>
@@ -82,7 +90,7 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
         )}
 
         <Tabs value={jobType} onValueChange={(v) => setJobType(v as JobType)}>
-          <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/50 rounded-xl mb-4">
+          <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/50 rounded-xl mb-6">
             <TabsTrigger
               value="git"
               className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all py-2.5"
@@ -99,85 +107,44 @@ export function CreateJobDialog({ open, onOpenChange }: CreateJobDialogProps) {
             </TabsTrigger>
           </TabsList>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <TabsContent value="git" className="mt-0 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="repositoryUrl">Repository URL</Label>
-                <Input
-                  id="repositoryUrl"
-                  placeholder="https://github.com/user/repo"
-                  value={formData.repositoryUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, repositoryUrl: e.target.value })
-                  }
-                  required={jobType === "git"}
-                  className="bg-muted/30 border-muted/60 focus:bg-background transition-colors"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="branch">Branch</Label>
-                <Input
-                  id="branch"
-                  placeholder="main"
-                  value={formData.branch}
-                  onChange={(e) =>
-                    setFormData({ ...formData, branch: e.target.value })
-                  }
-                  className="bg-muted/30 border-muted/60 focus:bg-background transition-colors"
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="local" className="mt-0 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="localPath">Local Path</Label>
-                <Input
-                  id="localPath"
-                  placeholder="/path/to/project"
-                  value={formData.localPath}
-                  onChange={(e) =>
-                    setFormData({ ...formData, localPath: e.target.value })
-                  }
-                  required={jobType === "local"}
-                  className="bg-muted/30 border-muted/60 focus:bg-background transition-colors"
-                />
-              </div>
-            </TabsContent>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="apiDir">Source Directory (Optional)</Label>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest bg-muted/40 px-1.5 py-0.5 rounded">
-                  Advanced
-                </span>
-              </div>
-              <Input
-                id="apiDir"
-                placeholder="e.g. ./src/api"
-                value={formData.apiDir}
-                onChange={(e) =>
-                  setFormData({ ...formData, apiDir: e.target.value })
-                }
-                className="bg-muted/30 border-muted/60 focus:bg-background transition-colors"
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <TabsContent value="git" className="m-0">
+              <GitSourceFields
+                repositoryUrl={formData.repositoryUrl}
+                branch={formData.branch}
+                onChange={handleFieldChange}
+                required={jobType === "git"}
               />
-              <p className="text-[11px] text-muted-foreground">
-                Path relative to root where your API definitions are located.
-              </p>
-            </div>
+            </TabsContent>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <TabsContent value="local" className="m-0">
+              <LocalSourceFields
+                localPath={formData.localPath}
+                onChange={handleFieldChange}
+                required={jobType === "local"}
+              />
+            </TabsContent>
+
+            <AdvancedJobOptions
+              projectName={formData.projectName}
+              apiDir={formData.apiDir}
+              onChange={handleFieldChange}
+            />
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-border/40 mt-2">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="hover:bg-muted"
+                className="hover:bg-muted font-semibold transition-colors"
+                disabled={createJob.isPending}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={createJob.isPending}
-                className="min-w-[120px]"
+                className="min-w-[130px] font-bold shadow-lg shadow-primary/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 {createJob.isPending ? (
                   <>

@@ -1,6 +1,7 @@
-import { formatDistanceToNow } from "date-fns";
-import { Calendar, Folder, GitBranch } from "lucide-react";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { Calendar, Folder, GitBranch, Timer } from "lucide-react";
 import { Job } from "@/types";
+import { JobDuration } from "@/components/jobs/job-duration";
 
 export default function JobMetaDetails({ job }: { job: Job }) {
   return (
@@ -16,8 +17,12 @@ export default function JobMetaDetails({ job }: { job: Job }) {
       <div className="flex items-center gap-1">
         <Calendar className="h-3 w-3" />
         <span>
-          {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+          {formatDistanceToNow(parseISO(job.created_at), { addSuffix: true })}
         </span>
+      </div>
+      <div className="flex items-center gap-1 border-l pl-4 border-border/40">
+        <Timer className="h-3 w-3" />
+        <JobDuration createdAt={job.created_at} updatedAt={job.updated_at} status={job.status} />
       </div>
     </div>
   );

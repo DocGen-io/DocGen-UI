@@ -1,4 +1,5 @@
 import { EndpointCard } from "@/components/endpoints/endpoint-card";
+import { isJSONString } from "@/utils";
 
 interface SearchResultsProps {
   results: any[];
@@ -11,7 +12,12 @@ export function SearchResults({ results, projectName }: SearchResultsProps) {
       {results.map((res: any, i: number) => (
         <EndpointCard
           key={`search-${i}`}
-          ep={{ ...res, data: JSON.parse(res.content) }}
+          ep={{
+            ...res,
+            data: isJSONString(res.content)
+              ? JSON.parse(res.content)
+              : res.content,
+          }}
           projectName={projectName}
         />
       ))}

@@ -41,7 +41,7 @@ export function SpecViewerDialog({
           <SwaggerUIRenderer
             spec={{
               paths: {
-                [path]: { [method.toLowerCase()]: data },
+                [path]: { [(method || "get").toLowerCase()]: data },
               },
             }}
             name={name}

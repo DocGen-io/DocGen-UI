@@ -26,8 +26,8 @@ export function RevisionCard({ revision, onApprove, onReject, isProcessing }: Re
                 {revision.endpoint_id}
               </h3>
               <Badge variant={
-                revision.status === 'approved' ? 'default' :
-                revision.status === 'rejected' ? 'destructive' :
+                revision.status === 'APPROVED' ? 'default' :
+                revision.status === 'REJECTED' ? 'destructive' :
                 'secondary'
               } className="capitalize">
                 {revision.status}
@@ -35,7 +35,7 @@ export function RevisionCard({ revision, onApprove, onReject, isProcessing }: Re
             </div>
           </div>
 
-          {revision.status === 'pending' && (
+          {revision.status === 'PENDING' && (
             <div className="flex gap-2">
               <Button
                 size="sm"

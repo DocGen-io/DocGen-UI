@@ -158,6 +158,22 @@ export function useRequestJoin() {
   });
 }
 
+// Join team via invite token
+export function useJoinViaInviteToken() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (token: string) => teamsAPI.joinViaInviteToken(token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: teamKeys.list() });
+      toast.success('Joined team successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to join team');
+    },
+  });
+}
+
 // Update member role
 export function useUpdateMemberRole(teamId: string) {
   const queryClient = useQueryClient();

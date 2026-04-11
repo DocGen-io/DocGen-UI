@@ -43,7 +43,7 @@ export function useCreateJob(teamId: string) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: { source_type: string; path: string; api_dir?: string }) =>
+    mutationFn: (data: { source_type: string; path: string; project_name?: string; api_dir?: string }) =>
       jobsApi.create(teamId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: jobKeys.list(teamId) });

@@ -1,6 +1,6 @@
 // ==================== Documentation Revisions ====================
 
-export type RevisionStatus = "pending" | "approved" | "rejected";
+export type RevisionStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type DiffAction = "add" | "modify" | "delete";
 
 export interface Revision {
@@ -33,6 +33,7 @@ export interface RejectRevisionRequest {
 }
 
 export interface ProposeRevisionRequest {
+  endpoint_id: string;
   file_path: string;
   action: DiffAction;
   original_content?: string;
