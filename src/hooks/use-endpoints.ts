@@ -128,3 +128,26 @@ export function useGrouping(projectName: string, teamId: string | undefined) {
     staleTime: 60000,
   });
 }
+
+export function useEndpointDetails(projectName: string, path: string, method: string, teamId: string | undefined) {
+  const detailsJob = useQuery({
+    queryKey: ["endpoint-details-job-trigger", projectName, path, method, teamId],
+    queryFn: () => endpointsApi.getEndpointDetails(projectName, path, method, teamId!),
+    enabled: !!projectName && !!path && !!method && !!teamId,
+    staleTime: 60000,
+  });
+
+  const jobId = detailsJob.data?.data?.id || detailsJob.data?.id;
+
+  return useQuery({
+    queryKey: ["endpoint-details", path, method, jobId],
+    queryFn: () => jobsApi.getUniversalStatus(jobId!),
+    enabled: !!jobId,
+    refetchInterval: (query) =>
+      query.state.data?.job?.status === "completed" ||
+      query.state.data?.job?.status === "failed"
+        ? false
+        : 1000,
+    select: (data) => data.job?.result?.endpoint,
+  });
+}
