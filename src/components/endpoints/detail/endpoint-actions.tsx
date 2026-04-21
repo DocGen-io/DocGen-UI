@@ -19,15 +19,11 @@ interface EndpointActionsProps {
 export function EndpointActions({ projectName, routeId, method, path, endpointData }: EndpointActionsProps) {
   const { activeTeam } = useTeamStore();
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
-  const [activeExampleJobId, setActiveExampleJobId] = useState<string | null>(null);
 
   const proposeMutation = useProposeRevision(activeTeam?.id || "");
   const generateExamplesMutation = useGenerateExamples(projectName, activeTeam?.id || "");
 
-  const handleTestEndpoint = () => {
-    toast("Opening REST client sandbox...");
-  };
+
 
   return (
     <div className="flex flex-col gap-4 sticky top-6 bg-card border border-border/50 p-6 rounded-xl shadow-sm">
@@ -100,21 +96,6 @@ export function EndpointActions({ projectName, routeId, method, path, endpointDa
         )}
       </Button>
 
-      <Button
-        variant="outline"
-        className="w-full justify-start gap-2 h-11"
-        onClick={handleTestEndpoint}
-      >
-        <Webhook className="w-4 h-4" />
-        Test Endpoint
-      </Button>
-
-      <Dialog open={isExamplesOpen} onOpenChange={setIsExamplesOpen}>
-        <ExamplesViewerDialog
-          jobId={activeExampleJobId}
-          onClose={() => setIsExamplesOpen(false)}
-        />
-      </Dialog>
     </div>
   );
 }
