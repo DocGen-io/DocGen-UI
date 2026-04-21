@@ -18,7 +18,7 @@ export function RevisionProposeDialog({
   onSave,
 }: RevisionProposeDialogProps) {
   return (
-    <DialogContent className="max-w-7xl w-[95vw] max-h-[90vh] overflow-y-auto p-0 border-none bg-background/95 backdrop-blur-xl shadow-2xl custom-scrollbar">
+    <DialogContent className="max-w-7xl sm:max-w-5xl lg:max-w-[1200px] w-[95vw] max-h-[90vh] overflow-y-auto p-0 border-none bg-background/95 backdrop-blur-xl shadow-2xl custom-scrollbar">
       <div className="p-0 pb-10">
         <DialogHeader className="p-6 sm:p-10 pb-0">
           <div className="flex items-center gap-4 mb-4">
