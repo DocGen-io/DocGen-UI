@@ -1,5 +1,4 @@
-import { EndpointCard } from "@/components/endpoints/endpoint-card";
-import { isJSONString } from "@/utils";
+import { SearchResultItem } from "./search-result-item";
 
 interface SearchResultsProps {
   results: any[];
@@ -8,19 +7,16 @@ interface SearchResultsProps {
 
 export function SearchResults({ results, projectName }: SearchResultsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {results.map((res: any, i: number) => (
-        <EndpointCard
-          key={`search-${i}`}
-          ep={{
-            ...res,
-            data: isJSONString(res.content)
-              ? JSON.parse(res.content)
-              : res.content,
-          }}
-          projectName={projectName}
-        />
-      ))}
-    </div>
+    <div className="w-full">
+      <h2 className="text-lg font-bold mb-4 tracking-tight flex items-center gap-2">
+        <span className="bg-primary/20 text-primary w-2 h-6 rounded-sm inline-block"></span>
+        Top related results
+      </h2>
+      <div className="flex flex-col gap-3 overflow-y-auto max-h-[60vh] pr-2 pb-4 seamless-scroll">
+        {results.map((res: any) => (
+          <SearchResultItem key={res.id} res={res} projectName={projectName} />
+        ))}
+      </div>
+    </div >
   );
 }
