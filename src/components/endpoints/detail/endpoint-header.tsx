@@ -14,20 +14,20 @@ export function EndpointHeader({ path, method, summary, operationId }: EndpointH
   return (
     <div className="flex flex-col gap-3 py-6 pb-8 border-b border-border/40">
       <div className="flex flex-wrap items-center gap-4">
-        <EndpointMethodBadge method={method} />
+        <EndpointMethodBadge method={method} className="text-sm px-3 py-1" />
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground font-mono truncate">
           {path}
         </h1>
       </div>
-      
+
       {summary && (
         <div className="flex flex-col gap-1 items-start">
           <p className={`text-muted-foreground text-lg max-w-3xl ${isSummaryExpanded ? "" : "line-clamp-2"}`}>
             {summary}
           </p>
           {summary.length > 150 && (
-            <button 
-              onClick={() => setIsSummaryExpanded(!isSummaryExpanded)} 
+            <button
+              onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
               className="text-xs font-semibold text-primary hover:underline mt-1"
             >
               {isSummaryExpanded ? "Show Less" : "Read More"}
