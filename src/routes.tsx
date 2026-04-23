@@ -123,6 +123,14 @@ export const router = createBrowserRouter([
           return { Component: EndpointsPage };
         },
       },
+      {
+        path: "projects/:projectName/endpoints/details",
+        lazy: async () => {
+          const { EndpointDetailsPage } =
+            await import("@/pages/endpoints/endpoint-details-page");
+          return { Component: EndpointDetailsPage };
+        },
+      },
     ],
   },
 ]);

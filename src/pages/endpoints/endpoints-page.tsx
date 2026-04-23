@@ -137,13 +137,14 @@ export function EndpointsPage() {
     if (!endpointsData?.endpoints) return [];
 
     return Object.entries(endpointsData.endpoints).flatMap(
-      ([path, pathItem]: [string, any]) =>
+      ([id, pathItem]: [string, any]) =>
         Object.entries(pathItem).map(([method, data]: [string, any]) => ({
-          path,
+          id,
           method,
+          path: data.path,
           data,
           nodeId: data["x-node-id"],
-          name: data.operationId || data.summary || `${method} ${path}`,
+          name: data.operationId || data.summary || `${method} ${data.path}`,
         })),
     );
   }, [endpointsData]);
