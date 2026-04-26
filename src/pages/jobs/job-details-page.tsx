@@ -6,7 +6,6 @@ import { useTeamStore } from "@/stores/team-store";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
@@ -37,7 +36,7 @@ export function JobDetailsPage() {
   const allLogs = useMergedLogs(jobResponse?.logs, realtimeLogs);
 
   // Use stored project name, falling back to path-based derivation only for legacy jobs
-  const effectiveProjectName = job?.project_name || 
+  const effectiveProjectName = job?.project_name ||
     (job?.path ? job.path.replace(/\/$/, "").split("/").pop() : "");
 
   if (jobLoading) return <JobLoadingState />;
@@ -94,24 +93,6 @@ export function JobDetailsPage() {
             revisions={revisions}
           />
 
-          {/* Help Card (Small enough to stay inline, or could be extracted too) */}
-          <Card className="bg-primary/5 border-primary/20 shadow-none">
-            <CardContent className="p-4 space-y-3">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
-                Need Help?
-              </h4>
-              <p className="text-[11px] text-primary/70 leading-relaxed font-medium">
-                If your job is stuck in 'pending', ensure your Celery worker is
-                running and has access to the repository.
-              </p>
-              <Button
-                variant="link"
-                className="p-0 h-auto text-xs font-bold text-primary hover:text-primary/80"
-              >
-                Documentation &rarr;
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
