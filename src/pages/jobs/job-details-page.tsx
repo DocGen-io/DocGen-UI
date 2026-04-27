@@ -6,12 +6,13 @@ import { useTeamStore } from "@/stores/team-store";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { JobInfoCard } from "@/components/jobs/job-info-card";
 import { TraceSummaryCard } from "@/components/jobs/trace-summary-card";
 import { LogViewer } from "@/components/jobs/log-viewer";
+import { useDeleteJob } from "@/hooks/use-jobs";
 
 import { JobArtifactsCard } from "@/components/jobs/job-artifacts-card";
 import { useMergedLogs } from "@/hooks/use-merge-logs";
@@ -31,6 +32,7 @@ export function JobDetailsPage() {
   } = useJobStatus(activeTeam?.id, jobId);
   const { logs: realtimeLogs, status: logsStatus } = useJobLogs(jobId);
   const { data: revisions } = useRevisions(activeTeam?.id, undefined, jobId);
+  const deleteJob = useDeleteJob(activeTeam?.id!);
 
   const job = jobResponse?.job;
   const allLogs = useMergedLogs(jobResponse?.logs, realtimeLogs);
@@ -38,6 +40,14 @@ export function JobDetailsPage() {
   // Use stored project name, falling back to path-based derivation only for legacy jobs
   const effectiveProjectName = job?.project_name ||
     (job?.path ? job.path.replace(/\/$/, "").split("/").pop() : "");
+
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this job? This will delete all associated logs.")) {
+      deleteJob.mutate(jobId!, {
+        onSuccess: () => navigate("/jobs")
+      });
+    }
+  };
 
   if (jobLoading) return <JobLoadingState />;
   if (jobError || !job) return <JobErrorState />;
@@ -68,7 +78,20 @@ export function JobDetailsPage() {
             </div>
           </div>
         }
-        action={<JobStatusBadge status={job.status} />}
+        action={
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 font-bold tracking-tight"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Job
+            </Button>
+            <JobStatusBadge status={job.status} />
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
