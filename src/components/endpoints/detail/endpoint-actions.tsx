@@ -4,26 +4,26 @@ import { PenTool, Code, Webhook } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { RevisionProposeDialog } from "@/components/endpoints/revision-propose-dialog";
-import { ExamplesViewerDialog } from "@/components/endpoints/examples-viewer-dialog";
 import { useProposeRevision } from "@/hooks/use-revisions";
 import { useGenerateExamples } from "@/hooks/use-endpoints";
 import { useTeamStore } from "@/stores/team-store";
+import { useExampleStore } from "@/stores/example-store";
 
 interface EndpointActionsProps {
   projectName: string;
   method: string;
   path: string;
   endpointData: any;
+  routeId?: string;
 }
 
 export function EndpointActions({ projectName, routeId, method, path, endpointData }: EndpointActionsProps) {
   const { activeTeam } = useTeamStore();
+  const { openExampleViewer } = useExampleStore();
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const proposeMutation = useProposeRevision(activeTeam?.id || "");
   const generateExamplesMutation = useGenerateExamples(projectName, activeTeam?.id || "");
-
-
 
   return (
     <div className="flex flex-col gap-4 sticky top-6 bg-card border border-border/50 p-6 rounded-xl shadow-sm">
@@ -76,8 +76,7 @@ export function EndpointActions({ projectName, routeId, method, path, endpointDa
           }, {
             onSuccess: (data: any) => {
               if (data?.id) {
-                setActiveExampleJobId(data.id);
-                setIsExamplesOpen(true);
+                openExampleViewer(data.id);
               }
             }
           });
@@ -95,7 +94,6 @@ export function EndpointActions({ projectName, routeId, method, path, endpointDa
           </>
         )}
       </Button>
-
     </div>
   );
 }

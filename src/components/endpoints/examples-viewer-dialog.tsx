@@ -23,8 +23,8 @@ export function ExamplesViewerDialog({ jobId, onClose }: ExamplesViewerDialogPro
   const hasError = isError || status === "failed";
 
   return (
-    <DialogContent showCloseButton={false} className="sm:max-w-[1200px] max-w-[95vw] w-full border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl rounded-3xl p-0 overflow-hidden">
-      <div className="flex items-center justify-between p-6 border-b border-border/10 bg-muted/5">
+    <DialogContent showCloseButton={false} className="sm:max-w-[1200px] max-w-[95vw] w-full border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl rounded-3xl p-0 overflow-hidden flex flex-col h-[80vh] sm:h-[750px] max-h-[90vh]">
+      <div className="flex items-center justify-between p-6 border-b border-border/10 bg-muted/5 shrink-0">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-primary/10 rounded-2xl">
             <Code2 className="w-6 h-6 text-primary" />
@@ -39,7 +39,7 @@ export function ExamplesViewerDialog({ jobId, onClose }: ExamplesViewerDialogPro
         </Button>
       </div>
 
-      <div className="p-6 overflow-y-auto max-h-[80vh]">
+      <div className="p-6 overflow-y-auto flex-1">
         {isProcessing ? (
           <ExampleLoadingState />
         ) : hasError ? (
