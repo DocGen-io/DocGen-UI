@@ -37,12 +37,11 @@ export function EndpointsPage() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [clusterResult, setClusterResult] = useState<any>(null);
 
-  const { data: projectsData } = useAvailableProjects(activeTeam?.id);
+  const { data: projectsData, isLoading: isLoadingProjects } = useAvailableProjects(activeTeam?.id);
   const availableProjects = useMemo(() => projectsData?.projects || [], [projectsData]);
 
   const { projectName, setProjectName } =
     useProjectDiscovery(availableProjects);
-
 
   // Data fetching
   const { data: endpointsData, isLoading: isLoadingEndpoints } =
@@ -226,8 +225,22 @@ export function EndpointsPage() {
           </TabsList>
 
           <TabsContent value="all" className="mt-8">
-            {isLoadingEndpoints ? (
+            {isLoadingEndpoints || isLoadingProjects ? (
               <EndpointSkeleton />
+            ) : !projectName ? (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <LayoutGrid className="w-10 h-10 text-muted-foreground/30" />
+                <p className="text-muted-foreground font-medium">
+                  No documented projects found. Complete a documentation job to see endpoints here!
+                </p>
+              </div>
+            ) : endpoints.length === 0 ? (
+              <div className="py-24 flex flex-col items-center gap-4 border border-dashed rounded-3xl">
+                <LayoutGrid className="w-10 h-10 text-muted-foreground/30" />
+                <p className="text-muted-foreground font-medium">
+                  Zero endpoints identified for this project.
+                </p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {endpoints.map((ep, i) => (
