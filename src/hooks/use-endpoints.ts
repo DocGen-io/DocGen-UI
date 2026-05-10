@@ -21,7 +21,7 @@ export function useEndpoints(projectName: string, teamId: string | undefined) {
 
   const jobId = listingJob.data?.id;
 
-  return useQuery({
+  const endpointsQuery = useQuery({
     queryKey: ["endpoints", projectName, jobId],
     queryFn: () => jobsApi.getUniversalStatus(jobId!),
     enabled: !!jobId,
@@ -34,6 +34,11 @@ export function useEndpoints(projectName: string, teamId: string | undefined) {
       endpoints: data.job?.result?.endpoints || {},
     }),
   });
+
+  return {
+    ...endpointsQuery,
+    isLoading: listingJob.isLoading || endpointsQuery.isLoading || (!!projectName && !!teamId && !endpointsQuery.data),
+  };
 }
 
 export function useSearchJob(searchJobId: string | null) {
@@ -139,7 +144,7 @@ export function useEndpointDetails(projectName: string, path: string, method: st
 
   const jobId = detailsJob.data?.data?.id || detailsJob.data?.id;
 
-  return useQuery({
+  const detailsQuery = useQuery({
     queryKey: ["endpoint-details", path, method, jobId],
     queryFn: () => jobsApi.getUniversalStatus(jobId!),
     enabled: !!jobId,
@@ -150,4 +155,9 @@ export function useEndpointDetails(projectName: string, path: string, method: st
         : 1000,
     select: (data) => data.job?.result?.endpoint,
   });
+
+  return {
+    ...detailsQuery,
+    isLoading: detailsJob.isLoading || detailsQuery.isLoading || (!!projectName && !!teamId && !detailsQuery.data),
+  };
 }

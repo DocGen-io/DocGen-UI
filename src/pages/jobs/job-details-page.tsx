@@ -6,13 +6,13 @@ import { useTeamStore } from "@/stores/team-store";
 
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 
 import { JobStatusBadge } from "@/components/jobs/job-status-badge";
 import { JobInfoCard } from "@/components/jobs/job-info-card";
 import { TraceSummaryCard } from "@/components/jobs/trace-summary-card";
 import { LogViewer } from "@/components/jobs/log-viewer";
+import { useDeleteJob } from "@/hooks/use-jobs";
 
 import { JobArtifactsCard } from "@/components/jobs/job-artifacts-card";
 import { useMergedLogs } from "@/hooks/use-merge-logs";
@@ -32,13 +32,22 @@ export function JobDetailsPage() {
   } = useJobStatus(activeTeam?.id, jobId);
   const { logs: realtimeLogs, status: logsStatus } = useJobLogs(jobId);
   const { data: revisions } = useRevisions(activeTeam?.id, undefined, jobId);
+  const deleteJob = useDeleteJob(activeTeam?.id!);
 
   const job = jobResponse?.job;
   const allLogs = useMergedLogs(jobResponse?.logs, realtimeLogs);
 
   // Use stored project name, falling back to path-based derivation only for legacy jobs
-  const effectiveProjectName = job?.project_name || 
+  const effectiveProjectName = job?.project_name ||
     (job?.path ? job.path.replace(/\/$/, "").split("/").pop() : "");
+
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this job? This will delete all associated logs.")) {
+      deleteJob.mutate(jobId!, {
+        onSuccess: () => navigate("/jobs")
+      });
+    }
+  };
 
   if (jobLoading) return <JobLoadingState />;
   if (jobError || !job) return <JobErrorState />;
@@ -69,7 +78,20 @@ export function JobDetailsPage() {
             </div>
           </div>
         }
-        action={<JobStatusBadge status={job.status} />}
+        action={
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 font-bold tracking-tight"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Job
+            </Button>
+            <JobStatusBadge status={job.status} />
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -94,24 +116,6 @@ export function JobDetailsPage() {
             revisions={revisions}
           />
 
-          {/* Help Card (Small enough to stay inline, or could be extracted too) */}
-          <Card className="bg-primary/5 border-primary/20 shadow-none">
-            <CardContent className="p-4 space-y-3">
-              <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
-                Need Help?
-              </h4>
-              <p className="text-[11px] text-primary/70 leading-relaxed font-medium">
-                If your job is stuck in 'pending', ensure your Celery worker is
-                running and has access to the repository.
-              </p>
-              <Button
-                variant="link"
-                className="p-0 h-auto text-xs font-bold text-primary hover:text-primary/80"
-              >
-                Documentation &rarr;
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

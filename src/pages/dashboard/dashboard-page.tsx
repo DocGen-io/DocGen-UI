@@ -13,9 +13,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { StatsOverview } from "@/components/dashboard/stats-overview";
 import { RecentJobsList } from "@/components/dashboard/recent-jobs-list";
 import { PendingRevisionsList } from "@/components/dashboard/pending-revisions-list";
-import { getDashboardStats } from "@/definitions/dashboard";
 import NoActiveTeam from "@/components/dashboard/no-active-team";
-
 export function DashboardPage() {
   const navigate = useNavigate();
   const { activeTeam } = useTeamStore();
@@ -29,8 +27,6 @@ export function DashboardPage() {
   } = useJobs(activeTeamId || undefined);
 
   const {
-    data: revisions,
-    isLoading: revisionsLoading,
     isError: revisionsError,
     refetch: refetchRevisions,
   } = useRevisions(activeTeamId || undefined);
@@ -41,15 +37,6 @@ export function DashboardPage() {
     if (jobsError) refetchJobs();
     if (revisionsError) refetchRevisions();
   };
-
-  const stats = getDashboardStats(
-    jobs,
-    jobsLoading,
-    jobsError,
-    revisions,
-    revisionsLoading,
-    revisionsError,
-  );
 
   if (!activeTeam) {
     return <NoActiveTeam onSetupClick={() => navigate("/teams")} />;
@@ -90,7 +77,7 @@ export function DashboardPage() {
         </Alert>
       )}
 
-      <StatsOverview stats={stats} />
+      <StatsOverview />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <RecentJobsList

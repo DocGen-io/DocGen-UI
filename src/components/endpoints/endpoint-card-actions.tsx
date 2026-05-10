@@ -5,10 +5,10 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { SpecViewerDialog } from "@/components/endpoints/spec-viewer-dialog";
 import { RevisionProposeDialog } from "@/components/endpoints/revision-propose-dialog";
-import { ExamplesViewerDialog } from "@/components/endpoints/examples-viewer-dialog";
 import { useProposeRevision } from "@/hooks/use-revisions";
 import { useGenerateExamples } from "@/hooks/use-endpoints";
 import { useTeamStore } from "@/stores/team-store";
+import { useExampleStore } from "@/stores/example-store";
 
 interface EndpointCardActionsProps {
   ep: {
@@ -22,10 +22,9 @@ interface EndpointCardActionsProps {
 
 export function EndpointCardActions({ ep, projectName }: EndpointCardActionsProps) {
   const { activeTeam } = useTeamStore();
+  const { openExampleViewer } = useExampleStore();
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isExamplesOpen, setIsExamplesOpen] = useState(false);
-  const [activeExampleJobId, setActiveExampleJobId] = useState<string | null>(null);
 
   const proposeMutation = useProposeRevision(activeTeam?.id || "");
   const generateExamplesMutation = useGenerateExamples(projectName, activeTeam?.id || "");
@@ -104,8 +103,7 @@ export function EndpointCardActions({ ep, projectName }: EndpointCardActionsProp
           }, {
             onSuccess: (data: any) => {
               if (data?.id) {
-                setActiveExampleJobId(data.id);
-                setIsExamplesOpen(true);
+                openExampleViewer(data.id);
               }
             }
           });
@@ -124,13 +122,6 @@ export function EndpointCardActions({ ep, projectName }: EndpointCardActionsProp
           </>
         )}
       </Button>
-
-      <Dialog open={isExamplesOpen} onOpenChange={setIsExamplesOpen}>
-        <ExamplesViewerDialog 
-          jobId={activeExampleJobId} 
-          onClose={() => setIsExamplesOpen(false)} 
-        />
-      </Dialog>
     </div>
   );
 }

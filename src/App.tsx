@@ -9,12 +9,15 @@ import { router } from "@/routes";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Toaster } from "sonner";
 
+import { GlobalExamplesViewer } from "@/components/endpoints/global-examples-viewer";
+
 export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <RouterProvider router={router} />
+          <GlobalExamplesViewer />
           <Toaster position="bottom-right" richColors />
           <ReactQueryDevtools initialIsOpen={false} />
         </ThemeProvider>
