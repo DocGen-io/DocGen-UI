@@ -1,24 +1,34 @@
-import { api } from '@/lib/api/client';
-import type { Team, TeamMember, TeamConfig } from '@/types';
+import { api } from "@/lib/api/client";
+import type { Team, TeamMember, TeamConfig, TeamRole } from "@/types";
 
 export const teamsAPI = {
   create: (data: { name: string; description?: string }) =>
-    api.post<Team>('/teams/', data),
-  getAll: () => api.get<Team[]>('/teams/me'),
+    api.post<Team>("/teams/", data),
+  getAll: () => api.get<Team[]>("/teams/me"),
   getById: (teamId: string) => api.get<Team>(`/teams/${teamId}`),
-  getMembers: (teamId: string) => api.get<TeamMember[]>(`/teams/${teamId}/members`),
+  getMembers: (teamId: string) =>
+    api.get<TeamMember[]>(`/teams/${teamId}/members`),
   invite: (teamId: string, userId: string) =>
     api.post<any>(`/teams/${teamId}/invite/${userId}`, {}),
-  respondToInvitation: (teamId: string, invitationId: string, accept: boolean) =>
-    api.post<any>(`/teams/${teamId}/invitations/${invitationId}/respond`, { accept }),
+  respondToInvitation: (
+    teamId: string,
+    invitationId: string,
+    accept: boolean,
+  ) =>
+    api.post<any>(`/teams/${teamId}/invitations/${invitationId}/respond`, {
+      accept,
+    }),
   regenerateInviteLink: (teamId: string) =>
     api.post<Team>(`/teams/${teamId}/invite-link/regenerate`, {}),
-  getInviteLink: (teamId: string) => 
+  getInviteLink: (teamId: string) =>
     api.get<{ invite_link: string }>(`/teams/${teamId}`), // invite_token is in TeamResponse
-  getConfig: (teamId: string) => api.get<TeamConfig>(`/teams/${teamId}/config/`),
-  update: (teamId: string, data: { description?: string; is_public?: boolean }) =>
-    api.patch<Team>(`/teams/${teamId}`, data),
-  async search(query: string = '') {
+  getConfig: (teamId: string) =>
+    api.get<TeamConfig>(`/teams/${teamId}/config/`),
+  update: (
+    teamId: string,
+    data: { description?: string; is_public?: boolean },
+  ) => api.patch<Team>(`/teams/${teamId}`, data),
+  async search(query: string = "") {
     return api.get<Team[]>(`/teams/search?q=${encodeURIComponent(query)}`);
   },
   async getByToken(token: string) {
@@ -27,8 +37,8 @@ export const teamsAPI = {
   async requestJoin(teamId: string) {
     return api.post<any>(`/teams/${teamId}/request-join`, {});
   },
-  async joinViaInviteToken(token: string) {
-    return api.post<any>(`/teams/join/${token}`, {});
+  async joinViaInviteToken(token: string, role: TeamRole | null) {
+    return api.post<any>(`/teams/join/${token}`, { role });
   },
   getPendingInvitations: (teamId: string) =>
     api.get<any[]>(`/teams/${teamId}/invitations`),

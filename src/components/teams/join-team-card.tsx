@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTeamStore } from "@/stores/team-store";
 
 interface JoinTeamCardProps {
   team: {
@@ -19,6 +20,7 @@ interface JoinTeamCardProps {
 }
 
 export function JoinTeamCard({ team, onJoin, isJoining }: JoinTeamCardProps) {
+  const { inviteRole } = useTeamStore();
   return (
     <Card className="w-full max-w-md overflow-hidden border-primary/20 shadow-2xl shadow-primary/5">
       <CardHeader className="bg-primary/5 text-center pb-8 border-b border-primary/10">
@@ -37,8 +39,8 @@ export function JoinTeamCard({ team, onJoin, isJoining }: JoinTeamCardProps) {
           <p className="text-sm text-muted-foreground text-center leading-relaxed">
             You've been invited to join{" "}
             <span className="font-bold text-foreground">@{team.slug}</span>. As
-            a member, you'll be able to view and contribute to team
-            documentation.
+            " {inviteRole || "a member"}", you'll be able to view and contribute
+            to team documentation.
           </p>
 
           <div className="flex items-center justify-center gap-6 py-2">

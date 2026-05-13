@@ -1,21 +1,15 @@
-import { useState } from "react";
-import { 
-  useTeams, 
-  useTeamMembers, 
-  usePendingInvitations, 
-  useRespondToInvitation, 
-  useUpdateMemberRole 
+import { useMemo, useState } from "react";
+import {
+  useTeams,
+  useTeamMembers,
+  usePendingInvitations,
+  useRespondToInvitation,
+  useUpdateMemberRole,
 } from "@/hooks/use-teams";
 import { useTeamStore } from "@/stores/team-store";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Loader2,
-  Users2,
-  Compass,
-  UserPlus,
-} from "lucide-react";
+import { Plus, Loader2, Users2, Compass, UserPlus } from "lucide-react";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { TeamList } from "@/components/teams/team-list";
 import { TeamRoster } from "@/components/teams/team-roster";
@@ -23,24 +17,28 @@ import { TeamSettingsDialog } from "@/components/teams/team-settings-dialog";
 import { InvitationList } from "@/components/teams/invitation-list";
 import { InviteMemberDialog } from "@/components/teams/invite-member-dialog";
 import { Link } from "react-router";
+import { useCurrentUser } from "@/hooks/use-auth";
 
 export function TeamsPage() {
   const { data: teams, isLoading: teamsLoading } = useTeams();
-  const { activeTeam, setActiveTeam, openCreateTeamDialog } =
-    useTeamStore();
+  const { data: user } = useCurrentUser();
+  const { activeTeam, setActiveTeam, openCreateTeamDialog } = useTeamStore();
   const { data: members, isLoading: membersLoading } = useTeamMembers(
     activeTeam?.id,
   );
-  
-  const { data: invitations, isLoading: invitationsLoading } = usePendingInvitations(activeTeam?.id || "");
+
+  const { data: invitations, isLoading: invitationsLoading } =
+    usePendingInvitations(activeTeam?.id || "");
   const respondMutation = useRespondToInvitation(activeTeam?.id || "");
   const updateRoleMutation = useUpdateMemberRole(activeTeam?.id || "");
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
 
-  const isAdmin =
-    activeTeam?.role === "ADMIN" || activeTeam?.role === "MAINTAINER";
+  let isAdmin = useMemo(() => {
+    let userAsMember = members?.find((m) => m.user_id === user?.id);
+    return userAsMember?.role === "ADMIN" || activeTeam?.role === "MAINTAINER";
+  }, [members]);
 
   if (teamsLoading) {
     return (
@@ -109,10 +107,12 @@ export function TeamsPage() {
         {/* Team Members Content */}
         <div className="lg:col-span-8 space-y-6">
           {activeTeam && (
-            <InvitationList 
-              invitations={invitations} 
+            <InvitationList
+              invitations={invitations}
               isLoading={invitationsLoading}
-              onRespond={(invitationId, accept) => respondMutation.mutate({ invitationId, accept })}
+              onRespond={(invitationId, accept) =>
+                respondMutation.mutate({ invitationId, accept })
+              }
               isRespondPending={respondMutation.isPending}
             />
           )}
@@ -122,8 +122,9 @@ export function TeamsPage() {
             members={members}
             isLoading={membersLoading}
             isAdmin={isAdmin}
-            currentUserRole={activeTeam?.role}
-            onUpdateRole={(userId, role) => updateRoleMutation.mutate({ userId, role })}
+            onUpdateRole={(userId, role) =>
+              updateRoleMutation.mutate({ userId, role })
+            }
             isUpdatePending={updateRoleMutation.isPending}
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenInvite={() => setInviteMemberOpen(true)}
