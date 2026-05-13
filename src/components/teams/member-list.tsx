@@ -9,10 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useMemo } from "react";
+import { useCurrentUser } from "@/hooks/use-auth";
 
 interface MemberListProps {
   members: TeamMember[];
-  currentUserRole?: string;
   onUpdateRole: (userId: string, newRole: string) => void;
   isUpdatePending: boolean;
 }
@@ -26,13 +27,18 @@ const roleIcons: Record<string, any> = {
 
 export function MemberList({
   members,
-  currentUserRole,
   onUpdateRole,
   isUpdatePending,
 }: MemberListProps) {
-  const canManage =
-    currentUserRole === "ADMIN" || currentUserRole === "MAINTAINER";
+  const { data: user } = useCurrentUser();
+  let canManage = useMemo(() => {
+    let userAsMember = members?.find((m) => m.user_id === user?.id);
+    return (
+      userAsMember?.role === "ADMIN" || userAsMember?.role === "MAINTAINER"
+    );
+  }, [members]);
 
+  console.log(members);
   return (
     <div className="grid gap-4">
       {members.map((member) => {

@@ -1,16 +1,10 @@
-import {
-  Loader2,
-  AlertTriangle,
-  RefreshCw,
-  GitPullRequest,
-  TrendingUp,
-} from "lucide-react";
+import { Loader2, GitPullRequest, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PendingRevisionItem } from "./pending-revision-item";
 import type { Revision } from "@/types";
 import PendingRevisionsError from "./pending-revisions-error";
-import { useApproveRevision, useRevisions } from "@/hooks/use-revisions";
+import { useRevisions } from "@/hooks/use-revisions";
 import { useTeamStore } from "@/stores/team-store";
 
 interface PendingRevisionsListProps {

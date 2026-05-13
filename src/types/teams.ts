@@ -11,7 +11,9 @@ export interface Team {
   role?: TeamRole;
 }
 
-export type TeamRole = "ADMIN" | "MAINTAINER" | "EDITOR" | "VIEWER";
+export const TEAM_ROLES = ["ADMIN", "MAINTAINER", "EDITOR", "VIEWER"] as const;
+
+export type TeamRole = (typeof TEAM_ROLES)[number];
 
 export interface TeamMember {
   id: string;

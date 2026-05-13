@@ -12,7 +12,6 @@ interface TeamRosterProps {
   onUpdateRole: (userId: string, role: string) => void;
   onOpenSettings: () => void;
   onOpenInvite: () => void;
-  currentUserRole?: string;
 }
 
 export function TeamRoster({
@@ -24,7 +23,6 @@ export function TeamRoster({
   onUpdateRole,
   onOpenSettings,
   onOpenInvite,
-  currentUserRole,
 }: TeamRosterProps) {
   return (
     <Card className="border-border/60 shadow-xl shadow-background/5 overflow-hidden">
@@ -71,7 +69,6 @@ export function TeamRoster({
         ) : members && members.length > 0 ? (
           <MemberList
             members={members}
-            currentUserRole={currentUserRole}
             onUpdateRole={onUpdateRole}
             isUpdatePending={isUpdatePending}
           />

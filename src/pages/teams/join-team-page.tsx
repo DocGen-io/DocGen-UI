@@ -3,18 +3,21 @@ import { useTeamByToken, useJoinViaInviteToken } from "@/hooks/use-teams";
 import { Loader2 } from "lucide-react";
 import { JoinTeamCard } from "@/components/teams/join-team-card";
 import { InvalidInvitationCard } from "@/components/teams/invalid-invitation-card";
+import { useTeamStore } from "@/stores/team-store";
 
 export function JoinTeamPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { inviteRole, setInviteRole } = useTeamStore();
   const { data: team, isLoading, error } = useTeamByToken(token || "");
   const joinMutation = useJoinViaInviteToken();
 
   const handleJoin = async () => {
     if (!token) return;
-    
+
     try {
-      await joinMutation.mutateAsync(token);
+      await joinMutation.mutateAsync({ token, role: inviteRole });
+      setInviteRole(null);
       navigate("/dashboard");
     } catch (err) {
       // toast already handled in hook
@@ -42,10 +45,10 @@ export function JoinTeamPage() {
 
   return (
     <div className="flex items-center justify-center min-h-[60vh] p-8">
-      <JoinTeamCard 
-        team={team} 
-        onJoin={handleJoin} 
-        isJoining={joinMutation.isPending} 
+      <JoinTeamCard
+        team={team}
+        onJoin={handleJoin}
+        isJoining={joinMutation.isPending}
       />
     </div>
   );
